@@ -1,9 +1,12 @@
-# A verification gate that refuses its own author's overclaims
+# A verification gate that catches stale and spoofed grounding
 
 Most "I verified this" claims bottom out in a *status label* — something was marked done.
-This is a small, runnable gate that accepts a result as **grounded** only if the cited
-proof **physically rebuilds and its source hash still matches the live file** — never on a
-label. It refuses spoofed, stale, and overclaimed inputs, and you can watch it do so.
+This gate does better on the one axis it can: it accepts a result as **grounded** only if
+the cited source **still hashes to what its build receipt recorded** — a live content check
+against the file on disk, not the receipt's say-so. So a stale, drifted, or spoofed receipt
+is caught. It *trusts* the receipt's reported build-exit and verdict; actually re-running
+the build at check time is a future rung, not a claim here. You can watch it refuse
+spoofed, stale, and overclaimed inputs.
 
 Two parts, both reproducible from a clean clone:
 
@@ -22,13 +25,14 @@ examples/   four expressions the gate judges — one accepted, three refused.
 
 | Example | The gate says | Why |
 |---|---|---|
-| `01_ACCEPT_grounded` | **COHERENT ✓** | the cited Lean proof builds and its hash matches the receipt — grounding earned |
-| `02_REJECT_spoofed_grounding` | **INCOHERENT ✗** (WF6) | labeled `grounded` but no real receipt — a status label never earns grounding |
-| `03_REJECT_stale_receipt` | **INCOHERENT ✗** (WF6) | the receipt's hash has drifted from the live source — "the proof changed since the build" |
+| `01_ACCEPT_grounded` | **COHERENT ✓** | the cited source still hashes to what the receipt recorded — freshness holds, grounding earned |
+| `02_REJECT_spoofed_grounding` | **INCOHERENT ✗** (WF6) | labeled `grounded` but no resolvable receipt — a status label alone never earns grounding |
+| `03_REJECT_stale_receipt` | **INCOHERENT ✗** (WF6) | the live source no longer hashes to the receipt's recorded hash — "the proof changed since the build" |
 | `04_REJECT_license_overclaim` | **INCOHERENT ✗** (WF5) | claims an *empirical* result but cites only a Lean proof — a proof can't license a world-measurement |
 
-The honest demonstration is that **it says NO** — to inputs designed to fool it, including
-ones that merely *assert* they are grounded.
+The honest demonstration is that **it says NO** — to a spoofed receipt, a stale (hash-drifted)
+receipt, and a prose overclaim. (It does not test a non-compiling build — that case lives in
+the Lean model, `noncompile_refused`, not in this demo.)
 
 ## Build and audit the proofs yourself
 
@@ -39,15 +43,16 @@ lake env lean AxiomAudit.lean    # prints the exact kernel axioms each theorem r
 ```
 
 The soundness/refusal theorems rest on one standard axiom (`propext`); the non-vacuity
-theorems rest on none. No `native_decide`, no `sorry`/`admit`/`axiom`. See
-`proofs/README.md` and `proofs/negative_control_verdict.yaml` (verdict: `NON_VACUOUS`).
+theorems rest on none. No `native_decide`, no `sorry`/`admit`/`axiom`. See `proofs/README.md`.
 
 ## What this is — and is NOT (stated up front)
 
 - It checks **coherence** (a claim's trust gradient holds up) and **grounding-freshness**
-  (a cited proof really builds and still matches). It does **not** check that a claim is
-  **true about the physical world** — a result can be coherent, grounded, and still wrong
-  about reality. Semantic correctness is a separate, harder problem and is not claimed here.
+  (the cited source still hashes to what the receipt recorded — catching drift, staleness,
+  and spoofed receipts). It **trusts** the receipt's reported build-exit/executed/verdict —
+  it does **not** re-execute the build at check time (a future rung). And it does **not**
+  check that a claim is **true about the physical world** — a result can be coherent,
+  grounded, and still wrong about reality.
 - `proofs/` models the gate's *acceptance rule* and proves it correct; it is not a
   line-by-line verification of the Python implementation.
 - `proof_index_subset.json` is a small **slice-local** register holding only the gate's own

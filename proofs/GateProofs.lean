@@ -7,10 +7,10 @@
   enforces when it decides whether a claim has earned the label `grounded`. The
   theorems below prove that rule is:
 
-    • SOUND        — the gate accepts ONLY a real, executed, exit-0 build whose recorded
-                     source hash still matches the live source. A status label alone
-                     never earns `grounded`; a receipt whose hash has drifted (the source
-                     changed since the build) is refused.
+    • SOUND        — the gate accepts ONLY when the receipt records a GROUNDED, executed,
+                     exit-0 build AND the recorded source hash still matches the live file
+                     (the one condition checked against the file on disk). A receipt whose
+                     hash has drifted — the source changed since the build — is refused.
     • DECIDABLE    — "is this receipt fresh / accepted?" is a total, computable question.
     • NON-VACUOUS  — the gate genuinely DISCRIMINATES: it accepts at least one receipt and
                      refuses at least one of EACH failure mode. A gate that accepted
@@ -27,8 +27,11 @@
   This models the CORE of `pap_check.py`'s WF6 grounding-acceptance branch (mechanism
   `lake_build`): the four conditions a computational grounding receipt must meet. It is a
   faithful model of that RULE — not a verification of the Python implementation, and not
-  a model of WF1–WF5 coherency, the social-adoption mechanism, or the file parsing. It
-  proves: the grounding rule, as modeled, cannot be fooled into accepting a stale,
+  a model of WF1–WF5 coherency, the social-adoption mechanism, or the file parsing. The
+  rule TRUSTS the receipt's `verdict`/`executed`/`buildExit` fields; the SINGLE condition it
+  checks against the live world is the source-hash match (`recordedSha = liveSha`) —
+  re-executing the cited build at check time is a separate, future capability, not modeled
+  here. It proves: the grounding rule, as modeled, cannot be fooled into accepting a stale,
   unexecuted, non-compiling, or non-GROUNDED receipt — and that it still accepts a good
   one. Crucially, it does NOT claim a grounded result is TRUE about the physical world:
   coherence + receipt-freshness is not semantic correctness.
@@ -60,8 +63,9 @@ structure Receipt where
 deriving DecidableEq, Repr
 
 /-- THE GATE. Mirrors `pap_check.py` `wf6_grounding` (computational branch): a receipt
-    earns `grounded` against the live source iff the witness returned GROUNDED, the build
-    was actually executed, it exited 0, AND the recorded hash equals the live hash. -/
+    earns `grounded` against the live source iff it RECORDS the witness as GROUNDED, the
+    build as executed, the exit as 0, AND the recorded hash equals the live hash. Only the
+    last is checked against the live file; the first three are the receipt's recorded fields. -/
 def accepts (r : Receipt) (liveSha : Hash) : Bool :=
   decide (r.verdict = Verdict.grounded) && r.executed &&
   decide (r.buildExit = 0) && decide (r.recordedSha = liveSha)
