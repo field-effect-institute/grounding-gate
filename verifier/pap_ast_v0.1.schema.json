@@ -41,7 +41,7 @@
     },
     "terms": {
       "type": "object",
-      "description": "Non-cell library symbols imported from a substrate-library (e.g. ForceTaxonomy v3.4, TrustGradient). The stdlib symbols that are not pattern x substrate cells.",
+      "description": "Non-cell library symbols imported from a shared library (e.g. a shared enum or named constant). The stdlib symbols that are not cells.",
       "additionalProperties": {
         "type": "object",
         "required": [
@@ -76,7 +76,7 @@
         "properties": {
           "pattern": {
             "type": "string",
-            "description": "A pattern identifier (e.g. P01..P30) or a descriptive pattern name."
+            "description": "A pattern identifier or a descriptive pattern name."
           },
           "substrate": {
             "type": "string"

@@ -17,7 +17,7 @@
  "entries": [
   {
    "proof_id": "PAPGATE-SOUND-001",
-   "pattern_id": "P31",
+   "pattern_id": "VERIFICATION_GATE",
    "substrate": "verification_gate",
    "status": "PROVED",
    "confidence": 1.0,
