@@ -1,0 +1,9 @@
+name = "GateProofs"
+version = "0.1.0"
+# The PAP grounding gate, modeled and proved correct. PLAIN Lean 4 — NO Mathlib
+# dependency, NO `native_decide`: every theorem is checked by the Lean kernel. A
+# reviewer can `lake build` this in seconds with nothing but a Lean toolchain.
+defaultTargets = ["GateProofs"]
+
+[[lean_lib]]
+name = "GateProofs"

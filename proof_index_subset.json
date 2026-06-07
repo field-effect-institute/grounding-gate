@@ -1,0 +1,34 @@
+{
+ "_note": "Slice-local proof register: the slice's own gate theorems (proofs/GateProofs.lean), kernel-checked and shipped here. Not a larger canonical register \u2014 only what the examples cite.",
+ "trust_gradient": {
+  "PROVED": {
+   "confidence": 1.0,
+   "action": "apply directly; cite proof_id + theorem"
+  },
+  "UNTESTED": {
+   "confidence": 0.0,
+   "action": "reason from scratch"
+  },
+  "NEGATIVE": {
+   "confidence": 0.0,
+   "action": "do not apply"
+  }
+ },
+ "entries": [
+  {
+   "proof_id": "PAPGATE-SOUND-001",
+   "pattern_id": "P31",
+   "substrate": "verification_gate",
+   "status": "PROVED",
+   "confidence": 1.0,
+   "lean_file": "proofs/GateProofs.lean",
+   "theorems": [
+    "PAPGate.sound",
+    "PAPGate.gate_discriminates"
+   ],
+   "key_results": "The grounding gate accepts only GROUNDED + executed + exit-0 + hash-match (sound), and is non-vacuous (discriminates). Kernel axioms: [propext]; non-vacuity: none.",
+   "registered_by": "PAP gate-proofs slice (slice-local)"
+  }
+ ],
+ "structural_proofs": []
+}

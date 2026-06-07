@@ -1,0 +1,568 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/pap_ast_v0.1.schema.json",
+  "title": "PAP AST v0.1",
+  "description": "Patterns-as-Primary expression AST. A PAP document is a set of named symbols (frames, terms, cells, bonds), expressions composed from them, projections (rotations into a frame), renders (emit to a target), receipts (world-contact evidence), and assertions (checkable properties). emit and ingest are inverses over THIS object: emit walks it to a target format; ingest parses a target format back into it. coherency is COMPUTED by passes WF1-WF5; grounding is GATED by WF6.",
+  "type": "object",
+  "required": [
+    "pap_version",
+    "expressions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "pap_version": {
+      "const": "0.1"
+    },
+    "meta": {
+      "type": "object",
+      "description": "Free-form provenance (origin, author substrate, frame-of-record).",
+      "additionalProperties": true
+    },
+    "frames": {
+      "type": "object",
+      "description": "Named vantage points. A frame is a (substrate, lens) origin. Every non-invariant expression names one.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "substrate"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "substrate": {
+            "type": "string",
+            "description": "Carrier domain / library namespace, e.g. physics, cryptography."
+          },
+          "lens": {
+            "type": "string",
+            "description": "The observer projection within the substrate, e.g. claude_code."
+          }
+        }
+      }
+    },
+    "terms": {
+      "type": "object",
+      "description": "Non-cell library symbols imported from a substrate-library (e.g. ForceTaxonomy v3.4, TrustGradient). The stdlib symbols that are not pattern x substrate cells.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "from"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "description": "Source library / substrate."
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cells": {
+      "type": "object",
+      "description": "(pattern x substrate) instances. The leaf unit the proof_index keys on. `trust` is RESOLVED from proof_index at check time; an authored value is a claim WF1 verifies.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "pattern",
+          "substrate"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "A pattern identifier (e.g. P01..P30) or a descriptive pattern name."
+          },
+          "substrate": {
+            "type": "string"
+          },
+          "trust": {
+            "type": "string",
+            "enum": [
+              "PROVED",
+              "CONDITIONAL",
+              "STRUCTURAL_ANALOG",
+              "UNTESTED",
+              "NEGATIVE"
+            ],
+            "description": "Resolved trust status. NEGATIVE cells are refused by WF2."
+          },
+          "proof_ref": {
+            "type": "string",
+            "description": "proof_id (or candidate id) backing the trust status. A bare id."
+          },
+          "preconditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "For CONDITIONAL cells: preconditions that must hold."
+          },
+          "claim": {
+            "type": "object",
+            "description": "OPTIONAL authored assertion carried by a CLAIM cell. `text` is the prose the renderer emits; `register` is the rhetorical register the prose claims. WF5 (claim-license) checks register <= the license the cited proof_ref grants: a PROVED structural/bridge proof licenses up to `structural`; only a substrate-Faithful PROVED licenses `substrate`; `empirical` is licensed by NO proof (it requires a fresh world-contact receipt, WF6) — so an empirical register over a Lean citation is the canonical over-claim WF5 rejects (a proof does not license a world-measurement). coherency (computed) and register (audited) are independent: a claim can rest on a PROVED cell yet still over-claim in prose.",
+            "required": [
+              "text",
+              "register"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "The authored assertion prose (may contain newlines)."
+              },
+              "register": {
+                "type": "string",
+                "enum": [
+                  "neutral",
+                  "analogy",
+                  "structural",
+                  "substrate",
+                  "empirical"
+                ],
+                "description": "neutral < analogy < structural < substrate < empirical. The strongest register the prose claims. WF5 rejects any register exceeding the cited proof_ref's license."
+              }
+            }
+          },
+          "layout": {
+            "type": "object",
+            "description": "OPTIONAL renderer configuration carried by a layout cell (not used by these examples).",
+            "additionalProperties": true
+          },
+          "lean": {
+            "type": "object",
+            "description": "OPTIONAL real, buildable Lean carried by a proof-bearing cell: import/open/theorem statement + a real proof term (NOT `sorry`) whose proof delegates to the cited theorem, so the emitted fragment builds clean.",
+            "additionalProperties": false,
+            "properties": {
+              "imports": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Lake module imports for the emitted fragment (e.g. GateProofs)."
+              },
+              "opens": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "`open` namespaces the emitted fragment needs (e.g. PAPGate)."
+              },
+              "statement": {
+                "type": "string",
+                "description": "The theorem statement (real Lean, e.g. `accepts goodReceipt liveSha = true`)."
+              },
+              "proof": {
+                "type": "string",
+                "description": "The real proof tactic/term (NOT `sorry`; e.g. `by decide`, or `exact <thm>` delegating to a cited theorem)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "bonds": {
+      "type": "object",
+      "description": "Proven structural relationships that LICENSE a composition. The typed connective between cells.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bond_id",
+          "cells"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "bond_id": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "References into `cells` this bond connects."
+          },
+          "type": {
+            "type": "string",
+            "description": "e.g. confidence_gradient, structural_identity, causal_chain, necessary_tension."
+          },
+          "universality": {
+            "type": "string",
+            "description": "e.g. STRUCTURAL_LAW (N substrates)."
+          }
+        }
+      }
+    },
+    "receipts": {
+      "type": "object",
+      "description": "World-contact evidence. Attaching a fresh receipt is the ONLY way an expression's grounding upgrades above floating (WF6). Cannot be synthesized from coherent self-reference. For a COMPUTATIONAL world-contact (a Lean build of the cited proof), the receipt carries the grounding-ledger fields below — additive + optional. WF6's ACCEPT branch is gated on (verdict==GROUNDED ∧ executed ∧ build_exit==0) AND a REAL recency check: source_sha256 must equal the live cited .lean's current sha256 (a content-predicate freshness check — a stale/sha-drifted receipt is REJECTED). Freshness is NOT mere presence of a stamp string.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "axis",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "type": "string",
+            "enum": [
+              "R0",
+              "R1",
+              "R2",
+              "R3"
+            ],
+            "description": "reality_contact axis level (R0 = no world-contact / structural; higher = stronger observational anchor). R1 = ONE concrete external world-contact — computational/executed (e.g. a lake build) OR observational/social (e.g. a witnessed external adoption). The KIND of contact is carried orthogonally by `mechanism`, not by the axis level."
+          },
+          "source": {
+            "type": "string",
+            "description": "What the observation/experiment/dataset is (e.g. 'Lean build of GateProofs.lean')."
+          },
+          "witness": {
+            "type": "string",
+            "description": "Who/what witnessed it (e.g. a cross-checker session id, or a fresh-build identifier)."
+          },
+          "freshness": {
+            "type": "string",
+            "description": "ISO timestamp the receipt was witnessed (human-readable). The OPERATIVE recency check is the content predicate source_sha256==live (WF6), not this stamp; the stamp is for the rendered receipt line."
+          },
+          "mechanism": {
+            "type": "string",
+            "enum": [
+              "lake_build",
+              "lake_env_lean_standalone",
+              "prover_corroboration",
+              "witnessed_adoption"
+            ],
+            "description": "How the entry was world-grounded. Computational (kernel) mechanisms: lake_build / lake_env_lean_standalone / prover_corroboration. Observational/social mechanism: witnessed_adoption — an independent party ADOPTED the work, witnessed by an acknowledgement + the adopter\u2019s persisting referencing edit. For witnessed_adoption, WF6 freshness is the social analog of source_sha256: the adopter artifact (`adopter_ref`) must STILL contain `citation_token` at check time (un-adoption -> STALE -> REJECT)."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "GROUNDED",
+              "DIVERGENT",
+              "UNVERIFIABLE"
+            ],
+            "description": "The grounding verdict. WF6 accepts ONLY GROUNDED; DIVERGENT/UNVERIFIABLE keep the expression floating (the honest finding)."
+          },
+          "executed": {
+            "type": "boolean",
+            "description": "Whether the build was actually executed (the anti-laundering guard: an inferred-not-run verdict is UNVERIFIABLE, never GROUNDED)."
+          },
+          "build_exit": {
+            "type": "integer",
+            "description": "The executed build's exit code. WF6 requires 0; a non-compiling build (exit != 0) is REJECTED."
+          },
+          "lean_file": {
+            "type": "string",
+            "description": "The cited .lean path relative to lean_root (e.g. GateProofs.lean). WF6 hashes the LIVE file here for the recency check."
+          },
+          "source_sha256": {
+            "type": "string",
+            "description": "sha256 of the cited .lean at build time. FRESH iff it equals the live file's current sha256 (content-predicate staleness)."
+          },
+          "mathlib_rev": {
+            "type": "string",
+            "description": "Pinned mathlib manifest rev at build time; FRESH requires it match the live manifest (Mathlib drift stales a receipt even with the .lean unchanged)."
+          },
+          "lean_toolchain": {
+            "type": "string",
+            "description": "Pinned lean toolchain at build time; FRESH requires it match the live lean-toolchain."
+          },
+          "cycle": {
+            "type": "string",
+            "description": "An optional cycle/run label."
+          },
+          "witnessed_utc": {
+            "type": "string",
+            "description": "ISO UTC stamp of the executed build."
+          },
+          "independence": {
+            "type": "string",
+            "description": "Witness independence level (e.g. N=2 cross-vendor, or N=1.5_same_vendor_fresh_build)."
+          },
+          "built_module": {
+            "type": "string",
+            "description": "The lake module name that was built (e.g. GateProofs). Rendered into a GROUNDED `lean` fragment's world-contact comment line."
+          },
+          "emitted_module": {
+            "type": "string",
+            "description": "The lake module name the EMITTED `lean` theorem itself was built as (the emitted theorem builds clean). Corroborating, not the WF6 freshness target."
+          },
+          "emitted_build_exit": {
+            "type": "integer",
+            "description": "The emitted theorem's own `lake build` exit code (0 = the emitted fragment compiles against the Lean kernel)."
+          },
+          "emitted_source_sha256": {
+            "type": "string",
+            "description": "sha256 of the exact bytes produced for the emitted (built) theorem; preserved for reproduction (the world-contact line embeds the CITED file's sha, not this one — non-circular)."
+          },
+          "prover": {
+            "type": "string",
+            "description": "The independent prover that re-proved the cited statement. Present on a `prover_corroboration` receipt; the WF6c gate REJECTS such a receipt if it lacks a prover or an accepted prover_verdict. Corroboration only — NOT a stronger grounding tier."
+          },
+          "prover_verdict": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The independent prover's verdict on the cited statement. WF6c accepts ONLY a re-proved verdict with sorry_count 0; a corroboration receipt with no prover_verdict is REJECTED.",
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "re-proved (the prover closed the sorry'd statement from scratch) or a non-accepted status."
+              },
+              "sorry_count": {
+                "type": "integer",
+                "description": "remaining sorries in the prover's solution; must be 0 to corroborate."
+              },
+              "has_solution": {
+                "type": "boolean"
+              }
+            }
+          },
+          "project_id": {
+            "type": "string",
+            "description": "The prover run's project/job id; the corroboration line embeds its first 12 chars."
+          },
+          "prover_lineage": {
+            "type": "string",
+            "description": "The prover's proof lineage — names WHICH independent prover corroborates, so cross-prover breadth is auditable."
+          },
+          "corroborates": {
+            "type": "string",
+            "description": "What this corroboration backs (the grounding receipt name or the cited statement) — provenance, not a grounding upgrade."
+          },
+          "adopter_ref": {
+            "type": "string",
+            "description": "witnessed_adoption: the adopter artifact (path under the project root). The re-checkable freshness SUBSTRATE — WF6 re-reads it and confirms it still contains `citation_token`. The social analog of `lean_file`."
+          },
+          "citation_token": {
+            "type": "string",
+            "description": "witnessed_adoption: the stable token the adopter must cite (e.g. the coupling id). FRESH iff `adopter_ref` still contains this string at check time; absent (un-adopted) -> STALE -> WF6 REJECT. The social analog of `source_sha256` content-freshness."
+          },
+          "witness_ref": {
+            "type": "string",
+            "description": "witnessed_adoption: the id of the adoption acknowledgement (the witness EVENT, for provenance/audit)."
+          },
+          "adopter_source_sha256": {
+            "type": "string",
+            "description": "witnessed_adoption: sha256 of `adopter_ref` at witness time (provenance snapshot; NOT the staling predicate — only removing `citation_token` stales the adoption)."
+          },
+          "adopter_count": {
+            "type": "integer",
+            "description": "witnessed_adoption: number of DISTINCT independent adopters (Condition C, honest N). One acknowledgement + the same adopter's edit is ONE adopter (N=1). WF6 over-claim guard: axis above R1 requires adopter_count >= 2."
+          },
+          "adopters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "witnessed_adoption: the DISTINCT adopter identities. len(adopters) must equal adopter_count (no double-counting one adopter via ack+edit)."
+          }
+        }
+      }
+    },
+    "expressions": {
+      "type": "object",
+      "description": "The core node. compose(symbols) via bonds @ frame :: orientation.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "compose",
+          "orientation"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "invariant",
+              "frame_bound"
+            ],
+            "default": "frame_bound",
+            "description": "invariant = frame-free (satisfies WF3 vacuously); frame_bound = must name a frame."
+          },
+          "frame": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reference into `frames`. null IFF kind == invariant."
+          },
+          "compose": {
+            "type": "array",
+            "description": "References into cells, terms, or other expressions. The structure being composed.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "via": {
+            "type": "array",
+            "description": "References into `bonds` that license the composition. Empty allowed for invariants / single-symbol exprs.",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "primary": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "OPTIONAL frame-relative primacy claim (which composed symbol is primary FROM THIS FRAME). WF3 REJECTS any global/frameless primacy assertion; primacy here is valid only because it is scoped to `frame`.",
+            "default": null
+          },
+          "orientation": {
+            "type": "object",
+            "required": [
+              "coherency",
+              "grounding"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "coherency": {
+                "type": "string",
+                "enum": [
+                  "PROVED",
+                  "CONDITIONAL",
+                  "STRUCTURAL_ANALOG",
+                  "UNTESTED",
+                  "NEGATIVE"
+                ],
+                "description": "COMPUTED by WF1-WF4 from composed cells/bonds. An authored value is checked, not trusted."
+              },
+              "grounding": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "floating",
+                      "grounded"
+                    ],
+                    "description": "floating = coherent but no observational anchor (city-in-the-sky; LEGAL, must be labeled). grounded = fresh receipt attached (WF6)."
+                  },
+                  "axis": {
+                    "type": "string",
+                    "enum": [
+                      "R0",
+                      "R1",
+                      "R2",
+                      "R3"
+                    ]
+                  },
+                  "receipt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Reference into `receipts`. Required when status == grounded."
+                  },
+                  "corroborations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "OPTIONAL references into `receipts` to independent-prover CORROBORATION receipts (mechanism prover_corroboration). A corroboration is an external re-prove of the SAME statement — cross-prover breadth, NOT a stronger grounding tier; it does NOT change `axis`, which is set by the grounding `receipt` alone. The WF6c gate validates each referenced corroboration carries an accepted prover verdict."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "projections": {
+      "type": "object",
+      "description": "A rotation of an expression into a frame. Projection is the morphism on the toroidal manifold of frames; no projection is privileged.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "source",
+          "frame"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Reference into `expressions`."
+          },
+          "frame": {
+            "type": "string",
+            "description": "Reference into `frames` to rotate into."
+          }
+        }
+      }
+    },
+    "renders": {
+      "type": "object",
+      "description": "emit to a target format. The writer direction. (ingest is the inverse: target -> AST.)",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Reference into `expressions` or `projections`."
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "prose",
+              "lean",
+              "paper",
+              "diagram"
+            ]
+          }
+        }
+      }
+    },
+    "assertions": {
+      "type": "object",
+      "description": "Checkable properties over the document (e.g. rotation-invariance within a projection class = a renderer's byte-identical guarantee).",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "invariant_within_class",
+              "round_trip",
+              "license_bound",
+              "acyclic_or_open_mouth"
+            ]
+          },
+          "of": {
+            "type": "string",
+            "description": "Reference into `expressions` / `projections`."
+          },
+          "over": {
+            "type": "string",
+            "description": "Scope, e.g. projection_class(physics)."
+          },
+          "relation": {
+            "type": "string",
+            "description": "e.g. byte_identical, ast_equiv."
+          }
+        }
+      }
+    }
+  },
+  "$comment": "Well-formedness passes (the checker; not enforced by this JSON Schema, run separately over a valid document): WF1 resolve every cell.proof_ref in the proof register. WF2 refuse any NEGATIVE cell. WF3 every frame_bound expression names a frame and asserts no GLOBAL primacy (frame-relative `primary` only). WF4 the compose/via graph is acyclic OR every cycle passes through a receipt-bearing (grounding) node = open-mouth. WF5 prose-register <= cited license (claim-license check). WF6 grounding.status==grounded requires a receipt that is (verdict==GROUNDED ∧ executed ∧ build_exit==0) AND FRESH — its source_sha256 equals the live cited .lean's current sha256 (content-predicate recency; a stale/sha-drifted or non-compiling receipt is REJECTED). coherency is the WF1-WF4 result; grounding is the WF6 gate."
+}

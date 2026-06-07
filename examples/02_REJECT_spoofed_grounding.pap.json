@@ -1,0 +1,51 @@
+{
+  "pap_version": "0.1",
+  "meta": {
+    "example": "02_REJECT_spoofed_grounding",
+    "purpose": "grounding=grounded with NO fresh receipt (receipt null, receipts {}). A PROVED citation raises COHERENCY; it does NOT earn GROUNDING. Grounding cannot be inherited from a label. Expect: INCOHERENT (WF6)."
+  },
+  "frames": {
+    "F_gate": {
+      "substrate": "verification_gate",
+      "lens": "engineer"
+    }
+  },
+  "cells": {
+    "gate_sound": {
+      "pattern": "VERIFICATION_GATE",
+      "substrate": "verification_gate",
+      "trust": "PROVED",
+      "proof_ref": "PAPGATE-SOUND-001",
+      "lean": {
+        "imports": [
+          "GateProofs"
+        ],
+        "opens": [
+          "PAPGate"
+        ],
+        "statement": "accepts goodReceipt liveSha = true",
+        "proof": "by decide"
+      }
+    }
+  },
+  "bonds": {},
+  "receipts": {},
+  "expressions": {
+    "spoof": {
+      "kind": "frame_bound",
+      "frame": "F_gate",
+      "compose": [
+        "gate_sound"
+      ],
+      "primary": "gate_sound",
+      "orientation": {
+        "coherency": "PROVED",
+        "grounding": {
+          "status": "grounded",
+          "axis": "R0",
+          "receipt": null
+        }
+      }
+    }
+  }
+}

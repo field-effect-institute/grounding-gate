@@ -1,0 +1,67 @@
+{
+  "pap_version": "0.1",
+  "meta": {
+    "example": "03_REJECT_stale_receipt",
+    "purpose": "grounding=grounded with a receipt whose source_sha256 has DRIFTED from the live proofs/GateProofs.lean (the .lean changed since the build). WF6 freshness is a content predicate: STALE -> REJECT. Expect: INCOHERENT (WF6 sha drift)."
+  },
+  "frames": {
+    "F_gate": {
+      "substrate": "verification_gate",
+      "lens": "engineer"
+    }
+  },
+  "cells": {
+    "gate_sound": {
+      "pattern": "VERIFICATION_GATE",
+      "substrate": "verification_gate",
+      "trust": "PROVED",
+      "proof_ref": "PAPGATE-SOUND-001",
+      "lean": {
+        "imports": [
+          "GateProofs"
+        ],
+        "opens": [
+          "PAPGate"
+        ],
+        "statement": "accepts goodReceipt liveSha = true",
+        "proof": "by decide"
+      }
+    }
+  },
+  "bonds": {},
+  "receipts": {
+    "gate_build_stale": {
+      "axis": "R1",
+      "source": "Lean build of proofs/GateProofs.lean (the gate's own soundness + non-vacuity proofs)",
+      "witness": "anthropic/claude-opus-4-8/pap-gate-slice",
+      "freshness": "2026-06-07T00:00:00Z",
+      "mechanism": "lake_build",
+      "built_module": "GateProofs",
+      "verdict": "GROUNDED",
+      "executed": true,
+      "build_exit": 0,
+      "lean_file": "GateProofs.lean",
+      "source_sha256": "deadbeef00000000000000000000000000000000000000000000000000000000",
+      "lean_toolchain": "leanprover/lean4:v4.29.0",
+      "independence": "N=1_same_vendor_fresh_build"
+    }
+  },
+  "expressions": {
+    "stale": {
+      "kind": "frame_bound",
+      "frame": "F_gate",
+      "compose": [
+        "gate_sound"
+      ],
+      "primary": "gate_sound",
+      "orientation": {
+        "coherency": "PROVED",
+        "grounding": {
+          "status": "grounded",
+          "axis": "R1",
+          "receipt": "gate_build_stale"
+        }
+      }
+    }
+  }
+}

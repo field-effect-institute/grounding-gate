@@ -1,0 +1,67 @@
+{
+  "pap_version": "0.1",
+  "meta": {
+    "example": "01_ACCEPT_grounded",
+    "purpose": "The gate ACCEPTS `grounded` because the cited Lean proof physically builds and its source hash matches the receipt. coherency (PROVED, from the trust gradient) and grounding (earned by the fresh build) are INDEPENDENT axes. Expect: COHERENT."
+  },
+  "frames": {
+    "F_gate": {
+      "substrate": "verification_gate",
+      "lens": "engineer"
+    }
+  },
+  "cells": {
+    "gate_sound": {
+      "pattern": "VERIFICATION_GATE",
+      "substrate": "verification_gate",
+      "trust": "PROVED",
+      "proof_ref": "PAPGATE-SOUND-001",
+      "lean": {
+        "imports": [
+          "GateProofs"
+        ],
+        "opens": [
+          "PAPGate"
+        ],
+        "statement": "accepts goodReceipt liveSha = true",
+        "proof": "by decide"
+      }
+    }
+  },
+  "bonds": {},
+  "receipts": {
+    "gate_build": {
+      "axis": "R1",
+      "source": "Lean build of proofs/GateProofs.lean (the gate's own soundness + non-vacuity proofs)",
+      "witness": "anthropic/claude-opus-4-8/pap-gate-slice",
+      "freshness": "2026-06-07T00:00:00Z",
+      "mechanism": "lake_build",
+      "built_module": "GateProofs",
+      "verdict": "GROUNDED",
+      "executed": true,
+      "build_exit": 0,
+      "lean_file": "GateProofs.lean",
+      "source_sha256": "5bbb2c00445b2aaf8022821919a6a91258f5dfea8b8f31fabda45057e1b1b2ae",
+      "lean_toolchain": "leanprover/lean4:v4.29.0",
+      "independence": "N=1_same_vendor_fresh_build"
+    }
+  },
+  "expressions": {
+    "gate_grounded": {
+      "kind": "frame_bound",
+      "frame": "F_gate",
+      "compose": [
+        "gate_sound"
+      ],
+      "primary": "gate_sound",
+      "orientation": {
+        "coherency": "PROVED",
+        "grounding": {
+          "status": "grounded",
+          "axis": "R1",
+          "receipt": "gate_build"
+        }
+      }
+    }
+  }
+}
